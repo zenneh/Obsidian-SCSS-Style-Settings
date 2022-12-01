@@ -1,0 +1,168 @@
+/*
+This is a simple function library to generate Obsidian Style settings with scss.
+@author @Zenneh
+
+For reference, check the Obsidian style settings repo
+- https://github.com/mgmeyers/obsidian-style-settings
+*/
+
+@use "sass:string";
+@use "sass:map";
+
+$yaml-tab: "\9\9";
+/* ----------------------------
+        Style Functions
+---------------------------- */
+@function CreateHeading($id, $title, $description, $level: 1, $collapsed: true){
+    $map: createDefaultSetting($id, $title, $description, "heading");
+    $map: map-merge($map1: $map, $map2: (
+        "level": $level,
+        "collapsed": $collapsed
+    ));
+    @return $map;
+}
+@function CreateClassToggle($id, $title, $description){
+    $map: createDefaultSetting($id, $title, $description, "class-toggle");
+    @return $map;
+}
+@function CreateClassSelect($id, $title, $description, $default, $options, $allowEmpty: false){
+    $map: createDefaultSetting($id, $title, $description, "class-select");
+    $map: map-merge($map1: $map, $map2: (
+        "default": $default,
+        "allowEmpty": $allowEmpty,
+        "options": $options
+    ));
+    @return $map;
+}
+@function CreateVariableText($id, $title, $description, $default){
+    $map: createDefaultSetting($id, $title, $description, "variable-text");
+    $map: map-merge($map1: $map, $map2: (
+        "default": $default,
+    ));
+    @return $map;
+}
+@function CreateVariableNumber($id, $title, $description, $default, $format: px){
+    $map: createDefaultSetting($id, $title, $description, "variable-number");
+    $map: map-merge($map1: $map, $map2: (
+        "default": $default,
+        "format": $format,
+    ));
+    @return $map;
+}
+@function CreateVariableNumberSlider($id, $title, $description, $default, $min, $max, $step: 1, $format: px){
+    $map: createDefaultSetting($id, $title, $description, "variable-number-slider");
+    $map: map-merge($map1: $map, $map2: (
+        "default": $default,
+        "min": $min,
+        "max": $max,
+        "step": $step,
+        "format": $format
+    ));
+    @return $map;
+}
+@function CreateVariableSelect($id, $title, $description, $default, $options){
+    $map: createDefaultSetting($id, $title, $description, "variable-select");
+    $map: map-merge($map1: $map, $map2: (
+        "default": $default,
+        "options": $options
+    ));
+    @return $map;
+}
+@function CreateVariableColor($id, $title, $description, $default, $options, $opacity: false, $format: hex){
+    $map: createDefaultSetting($id, $title, $description, "variable-color");
+    $map: map-merge($map1: $map, $map2: (
+        "default": $level,
+        "opacity": $opacity,
+        "format": $format,
+        "options": $options
+    ));
+    @return $map;
+}
+
+/* ----------------------------
+        Private Functions
+---------------------------- */
+// 
+@function createSettingsMap($map, $settings...){
+    @each $setting in $settings {
+        $map: map-merge($map1: $map, $map2: $setting);
+    }
+
+    @return $map;
+}
+
+@function createDefaultSetting($id, $title, $description, $type){
+    $setting: ();
+    $setting: map-merge($setting, ("id": $id));
+    $setting: map-merge($setting, ("title": $title));
+    $setting: map-merge($setting, ("description": $description));
+    $setting: map-merge($setting, ("type": $type));
+    @return $setting;
+}
+
+@function CreateOption($value, $label: None){
+    @if $label == None {
+        @return ("value": $value)
+    };
+    @return (
+        "label": $label,
+        "value": $value
+    );
+}
+
+@function CreateColorOption($id, $format){
+    @return (
+        "id": $id,
+        "format": $format
+    );
+}
+@function generateOptionString($values){
+    $string: "\d";
+
+    @each $option in $values {
+        // $option: meta.call($option);
+        $value: map-get($map: $option, $key: "value");
+        @if map-get($map: $option, $key: "label") {
+            $label: map-get($map: $option, $key: "label");
+            $string: str-insert($string: #{"\d" + $yaml-tab + $yaml-tab + $yaml-tab + "-\d"}, $insert: $string, $index: 0);  // - 
+            $string: str-insert($string: #{$yaml-tab + $yaml-tab + $yaml-tab + $yaml-tab + "label: " + $label + "\d"}, $insert: $string, $index: 0);  // label
+            $string: str-insert($string: #{$yaml-tab + $yaml-tab + $yaml-tab + $yaml-tab + "value: " + $value + "\d"}, $insert: $string, $index: 0);  // value
+        }
+        @else {
+            $string: str-insert($string: #{$yaml-tab + $yaml-tab + $yaml-tab + "- "+$value + "\d"}, $insert: $string, $index: 0);  // value
+        }
+    }
+    @return $string;
+}
+
+// generate the settings string for a setting
+@function generateString($settings, $tabs) {
+    $string: $yaml-tab + "-\d";
+    @each $key, $value in $settings {
+        // check if option setting is selected
+        @if $key == "options" {
+            // add option field
+            $string: str-insert($string: #{$yaml-tab + $yaml-tab + $key + ":"}, $insert: $string, $index: 0); // options
+
+            // add options
+            $optionstring: generateOptionString($value);
+            $string: str-insert($string: $optionstring, $insert: $string, $index: 0); // options 
+        }
+        @else {
+            $string: str-insert($string: #{$yaml-tab + $yaml-tab + $key + ": " + $value "\d"}, $insert: $string, $index: 0);
+        }
+    };
+    @return $string;
+}
+
+// generate all settings
+@function generateSettings($settings) {
+    $string: "";
+    @each $setting in $settings {
+        $result: generateString($setting, "\9\9");
+        $string: str-insert($string: $result, $insert: $string, $index: 0);
+    }
+
+    @return $string;
+}
+
