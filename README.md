@@ -81,6 +81,7 @@ settings:
 @use "style-settings.scss" as ss;
 
 $settings: (
+    ss.CreateHeader("[id]", "[name]", "[Description]", 1, false),
     ss.CreateVariableSelect("[id]", "[name]", "[description]", (
         ss.CreateColorOption(
             "[id]": "[format]"
