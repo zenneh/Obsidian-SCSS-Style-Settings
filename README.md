@@ -52,6 +52,7 @@ Components
 
 
 ## Creating Components with options
+### Normal options
 ```scss
 @use "style-settings.scss" as ss;
 
@@ -59,6 +60,30 @@ $settings: (
     ss.CreateVariableSelect("theme-name", "Theme name", "Select theme name", (
         ss.CreateOption(
             "[value]": "[label]"
+        )
+    ))
+);
+
+$settings: ss.generateSettings($settings);
+
+/* @settings
+
+name: [Theme name]
+id: [Theme id]
+settings:
+#{$settings}
+*/
+```
+
+*! The label is optional in this component*
+### Color options
+```scss
+@use "style-settings.scss" as ss;
+
+$settings: (
+    ss.CreateVariableSelect("[id]", "[name]", "[description]", (
+        ss.CreateColorOption(
+            "[id]": "[format]"
         )
     ))
 );
